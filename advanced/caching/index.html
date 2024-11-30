@@ -1,0 +1,955 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Sentry">
+      
+      
+        <link rel="canonical" href="https://getsentry.github.io/symbolicator/advanced/caching/">
+      
+      
+        <link rel="prev" href="../system-architecture/">
+      
+      
+        <link rel="next" href="../shared-cache/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.46">
+    
+    
+      
+        <title>Caching - Sentry Symbolicator</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../_css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#caching" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Sentry Symbolicator" class="md-header__button md-logo" aria-label="Sentry Symbolicator" data-md-component="logo">
+      
+  <img src="../../static/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Sentry Symbolicator
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Caching
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/getsentry/symbolicator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Sentry Symbolicator" class="md-nav__button md-logo" aria-label="Sentry Symbolicator" data-md-component="logo">
+      
+  <img src="../../static/icon.png" alt="logo">
+
+    </a>
+    Sentry Symbolicator
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/getsentry/symbolicator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Advanced
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Advanced
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../background-and-principles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Background and Principles
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../system-architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    System Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Caching
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Caching
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cache-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Enforcement
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scopes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scopes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pruning-caches" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pruning Caches
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shared-cache/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shared Cache
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../symbol-lookup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lookup Strategy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../symbol-server-compatibility/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Symbol Server Compatibility
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../source-bundles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Source Bundles
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/minidump/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    POST /minidump
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/symbolication/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    POST /symbolicate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/applecrashreport/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    POST /applecrashreport
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/sourcemaps/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    POST /symbolicate-js
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/response/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Symbolication Response
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/proxy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Symbol Server Proxy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cache-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache Enforcement
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scopes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scopes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pruning-caches" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pruning Caches
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="caching">Caching</h1>
+<p>Conceptionally, Symbolicator does not store debug information files but treats
+them as transient caches. Symbolicator caches two types of files: Raw debug
+information files and symbolication caches.</p>
+<h2 id="cache-files">Cache Files</h2>
+<p>Symbolicator caches two kinds of files: original Debug Information Files and
+derived caches which comprise SymCaches and CFI caches.</p>
+<ul>
+<li><strong>Debug Information Files (Object Files)</strong> (original): The original debug
+  files as they are stored on external sources. They are cached to allow for
+  faster recomputation of the derived caches, especially when after an update
+  the format of the derived caches change. Otherwise, all original files would
+  have to be downloaded again which could incur significant performance impact.
+  DIFs are platform dependent and usually large in size, up to multiple GB.
+  Their internal structure is platform dependent.</li>
+<li><strong>Object Meta Files</strong> (derived): Important attributes of a Object File used to
+  determine which Object File is the best one. This information is persisted
+  separately from Object Files because we want to delete Object Files a few days
+  after download for disk we want to delete Object Files a few days after
+  download for disk space while still knowing some information about them.</li>
+<li><strong>Symbolication Caches</strong> (derived): A platform-independent representation of
+  function and line information to symbolicate instruction addresses. Those
+  files are usually significantly smaller than native DIFs. However, endianness
+  of the file contents depends on the host so these files cannot be transferred
+  between systems with different endianness.</li>
+<li><strong>CFI Caches</strong> (derived): A platform-independent representation of stack
+  unwind information to allow stackwalking. This currently uses the Breakpad
+  ASCII format.</li>
+</ul>
+<h2 id="cache-rules">Cache Rules</h2>
+<p>In addition to caching DIFs and derived caches, Symbolicator also stores
+placeholders to indicate the absence of or errors when retrieving or computing
+those files. The cache adheres to the following rules:</p>
+<ol>
+<li>DIFs are cached until they have not been used for <em>7 days</em> but may be deleted
+   earlier when disk space is running out. A DIF is used when a derived cache is
+   computed from it.</li>
+<li>Derived caches that were successfully created from preferred DIFs are cached
+   until they have not been used for <em>at least 7 days</em>.</li>
+<li>Derived caches that were successfully created from fallback DIFs are treated
+   equally but <em>at most once per hour</em> an upgrade attempt is started to search
+   for better DIFs.</li>
+<li>The absence of a DIF is cached for <em>1 hour</em>, after that another fetch attempt
+   from all sources is started.</li>
+<li>Failed conversions (due to malformed or unsupported debug files) are cached
+   for <em>24 hours</em> but only up to the <em>next restart</em>. After that, another
+   conversion is attempted. The restart constraint serves the purpose to allow
+   immediate bug fixes.</li>
+</ol>
+<p>Derived caches can continue to be stored independently of the DIFs they were
+created from. Because they are smaller than the originals, this contributes to a
+better use of the available disk space. All timeouts mentioned above are
+configurable:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">caches</span><span class="p">:</span>
+<span class="w">  </span><span class="n">downloaded</span><span class="p">:</span>
+<span class="w">    </span><span class="n">max_unused_for</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="n">d</span><span class="w"> </span><span class="c1"># unused DIFs, rule 1</span>
+<span class="w">    </span><span class="n">retry_misses_after</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="n">h</span><span class="w"> </span><span class="c1"># absence of a DIF, rule 4</span>
+<span class="w">  </span><span class="n">derived</span><span class="p">:</span>
+<span class="w">    </span><span class="n">max_unused_for</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="n">d</span><span class="w"> </span><span class="c1"># unused caches, rule 2</span>
+<span class="w">    </span><span class="n">retry_misses_after</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="n">h</span><span class="w"> </span><span class="c1"># also necessary for rule 4</span>
+</code></pre></div>
+
+<h2 id="cache-enforcement">Cache Enforcement</h2>
+<p>In order to enforce the desired cache behavior, Symbolicator uses file system
+meta data and information stored in the files themselves to determine when to
+evict items from the cache.</p>
+<ol>
+<li><strong>Last use of derived cache</strong>: The time when a derived cache was last used in
+   a symbolication request. This allows to prune cold caches from the system,
+   even from an external service. This value is stored in the <em>mtime</em> of the
+   symbolication file and updated at most <em>once per hour</em>.</li>
+<li><strong>Last attempt to fetch dependencies of a cache:</strong> The time when the a
+   derived cache could not be constructed because no debug files were available.
+   Instead, a placeholder cache file is created and its <em>mtime</em> indicates the
+   attempt. If this file is older than the threshold (default <em>1 hour</em>), another
+   fetch attempt can be started and the file is recreated or replaced. <strong>NOTE</strong>:
+   The placeholder is created for the derived cache only, because otherwise too
+   many placeholders would be created.</li>
+<li><strong>Last failed cache conversion</strong>: The time when deriving a cache from a
+   native DIF failed due to an error. A placeholder file is created and its
+   <em>mtime</em> indicates the attempt. If a file is older than the threshold (default
+   <em>24 hours</em>), conversion is repeated. If the debug files have been deleted in
+   between, this causes another fetch from external sources.</li>
+<li><strong>DIFs used for derived cache</strong>: The kind of debug information that was used
+   to compute a derived cache. SymCaches store this in their header, so this can
+   be retrieved inexpensively by opening the file. CFI caches currently do not
+   contain this information, although all DIFs offer equal quality of unwind
+   information.</li>
+<li><strong>Last cache upgrade:</strong> The last time when an upgrade of an existing derived
+   cache was attempted since it was not computed from a preferred source. This
+   also uses the file’s <em>mtime</em> and attempts an update every time the
+   modification time exceeds the threshold.</li>
+</ol>
+<h2 id="scopes">Scopes</h2>
+<p>Cached files are associated to a scope, which is given by the symbolication
+request. The default is a “global” scope, which implicitly makes the files
+accessible to any request (scoped and not scoped). Otherwise, the scope needs to
+match for caches to be used. Note that there is no verification of the scope
+number, so users of Symbolicator are required to ensure the soundness of scope
+values.</p>
+<p>Scoping is achieved by encoding the scope identifier into the cache paths, thus
+creating separate cache directories for each scope.</p>
+<h2 id="pruning-caches">Pruning Caches</h2>
+<p>The <code>symbolicator cleanup</code> command removes stale caches. This command needs to
+be run manually and periodically, or at least when disk space is about to run
+out.</p>
+<p>Symbolicator operates under the assumption that files may be removed by an
+external actor at any time (one such actor is <code>symbolicator cleanup</code> itself
+which does not really attempt to synchronize with the main symbolicator
+service).</p>
+<p>Symbolicator assumes a fully POSIX-compliant filesystem to be able to serve
+requests without interruptions while files are being deleted. <strong>Using a network
+share for the cache folder will not work.</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+    
+  </body>
+</html>
