@@ -8,6 +8,12 @@
   now take an additional `platform` parameter. Stack frames gain this parameter
   as well. ([#1560](https://github.com/getsentry/symbolicator/pull/1560))
 
+### Dependencies
+
+- Bump Native SDK from v0.7.15 to v0.16.4 ([#44](https://github.com/pombredanne/symbolicator/pull/44))
+  - [changelog](https://github.com/getsentry/sentry-native/blob/master/CHANGELOG.md#0164)
+  - [diff](https://github.com/getsentry/sentry-native/compare/0.7.15...0.16.4)
+
 ## 24.11.1
 
 ### Dependencies
